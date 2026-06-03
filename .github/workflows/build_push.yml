@@ -187,10 +187,13 @@ jobs:
 
       - name: Merge repo
         run: |
-          # Copia il file finale generato dall'inspector direttamente nella cartella di deploy
+          # 1. Copia il file originale come index.json
           cp ${{ github.ref_name }}/output.json repo/index.json
           
-          # Copia tutti gli APK rinominati dentro la cartella dei pacchetti del repo
+          # 2. Crea la versione minificata richiesta (index.min.json)
+          jq -c . ${{ github.ref_name }}/output.json > repo/index.min.json
+          
+          # 3. Copia tutti gli APK rinominati dentro la cartella dei pacchetti del repo
           mkdir -p repo/apk
           cp -r ${{ github.ref_name }}/repo/apk/* repo/apk/
 
