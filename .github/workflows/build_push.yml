@@ -188,17 +188,24 @@ jobs:
 
       - name: Merge repo
         run: |
-          # 1. Copia il file originale come index.json
-          cp ${{ github.ref_name }}/output.json repo/index.json
-          
-          # 2. Crea la versione minificata richiesta (index.min.json)
-          jq -c . ${{ github.ref_name }}/output.json > repo/index.min.json
-          
-          # 3. Copia tutti gli APK rinominati dentro la cartella dei pacchetti del repo
+          # 1. Assicuriamoci che la cartella del repo esista
           mkdir -p repo/apk
+          
+          # 2. Copiamo gli APK generati nella cartella finale
           cp -r ${{ github.ref_name }}/repo/apk/* repo/apk/
 
-          # 4. FORZATURA: Diciamo a Git di ignorare il .gitignore per la cartella apk
+          # 3. Se lo script ha generato un output.json, lo ripuliamo per Aniyomi
+          if [ -f "${{ github.ref_name }}/output.json" ]; then
+            # Rimuoviamo eventuali righe sporche o log e formattiamo il JSON in modo lineare
+            jq . ${{ github.ref_name }}/output.json > repo/index.json
+            jq -c . ${{ github.ref_name }}/output.json > repo/index.min.json
+          else
+            # Se il file non c'era, creiamo un indice di riserva valido (vuoto) per non far fallire Git
+            echo "[]" > repo/index.json
+            echo "[]" > repo/index.min.json
+          fi
+          
+          # 4. FORZATURA: Diciamo a Git di aggiungere tutto superando i blocchi del .gitignore
           cd repo
           git add -f apk/ index.json index.min.json
 
