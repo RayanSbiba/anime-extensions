@@ -190,7 +190,9 @@ jobs:
           DELETE: ${{ needs.prepare.outputs.delete }}
         run: |
           cd repo
-          if [ ! -f index.json ]; then echo '{"extensions":[]}' > index.json; fi
+          if [ ! -f index.json ] || [ "$(cat index.json)" = '{"extensions":[]}' ]; then 
+            echo '{"extensions":[{"pkg":"placeholder.test","name":"Placeholder","apk":"placeholder.apk","versionCode":1,"versionName":"1.0","lang":"all","isNsfw":false,"hasReadme":false,"hasChangelog":false,"sources":[]}]}' > index.json
+          fi
           python ../${{ github.ref_name }}/.github/scripts/merge-repo.py "$DELETE" '${{ github.ref_name }}/repo'
 
       - name: Deploy repo
