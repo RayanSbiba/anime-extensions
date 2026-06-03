@@ -84,7 +84,7 @@ jobs:
       - id: generate-matrices
         name: Create output matrices
         run: |
-          python ./.github/scripts/generate-build-matrices.py "$NX_BASE" Release
+          python ./.github/scripts/generate-build-matrices.py "$NX_BASE" Debug
 
   build:
     name: Build extensions (${{ matrix.chunk.number }})
@@ -113,11 +113,6 @@ jobs:
         with:
           cache-read-only: ${{ matrix.chunk.number > 1 }}
 
-      - name: Prepare signing key
-        run: |
-          echo ${{ secrets.SIGNING_KEY }} | base64 -d > signingkey.jks
-          chmod 600 signingkey.jks
-
       - name: Build extensions (${{ matrix.chunk.number }})
         env:
           MODULES: ${{ join(matrix.chunk.modules, ' ') }}
@@ -140,10 +135,9 @@ jobs:
           path: "**/*.apk"
           retention-days: 1
 
-      - name: Clean up CI files
-        run: rm signingkey.jks
-
   publish:
+    permissions:
+      contents: write
     name: Publish extension repo
     needs: [prepare, build]
     runs-on: ubuntu-latest
@@ -170,8 +164,13 @@ jobs:
 
       - name: Create repo artifacts
         run: |
+          mkdir -p ${{ github.ref_name }}/repo/apk
+          
+          find ~/apk-artifacts -name "*.apk" -exec cp {} ${{ github.ref_name }}/repo/apk/ \;
+          
           cd ${{ github.ref_name }}
-          python ./.github/scripts/move-built-apks.py
+          find repo/apk/ -name "*-debug.apk" -exec sh -c 'mv "$1" "${1%-debug.apk}-release.apk"' _ {} \;
+          
           INSPECTOR_LINK="$(curl -s "https://api.github.com/repos/komikku-app/aniyomi-extensions-inspector/releases/latest" | jq -r '.assets[0].browser_download_url')"
           curl -L "$INSPECTOR_LINK" -o ./Inspector.jar
           java -jar ./Inspector.jar "repo/apk" "output.json" "tmp"
@@ -198,5 +197,3 @@ jobs:
         with:
           message: "${{ needs.prepare.outputs.latestCommitMessage }}"
           cwd: "./repo"
-          # committer_name: github-actions[bot]
-          # committer_email: github-actions[bot]@users.noreply.github.com
