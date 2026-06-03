@@ -186,14 +186,13 @@ jobs:
           persist-credentials: true
 
       - name: Merge repo
-        env:
-          DELETE: ${{ needs.prepare.outputs.delete }}
         run: |
-          cd repo
-          if [ ! -f index.json ] || [ "$(cat index.json)" = '{"extensions":[]}' ]; then 
-            echo '{"extensions":[{"pkg":"placeholder.test","name":"Placeholder","apk":"placeholder.apk","versionCode":1,"versionName":"1.0","lang":"all","isNsfw":false,"hasReadme":false,"hasChangelog":false,"sources":[]}]}' > index.json
-          fi
-          python ../${{ github.ref_name }}/.github/scripts/merge-repo.py "$DELETE" '${{ github.ref_name }}/repo'
+          # Copia il file finale generato dall'inspector direttamente nella cartella di deploy
+          cp ${{ github.ref_name }}/output.json repo/index.json
+          
+          # Copia tutti gli APK rinominati dentro la cartella dei pacchetti del repo
+          mkdir -p repo/apk
+          cp -r ${{ github.ref_name }}/repo/apk/* repo/apk/
 
       - name: Deploy repo
         uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321 # v10.0.0
