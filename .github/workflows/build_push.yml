@@ -190,6 +190,7 @@ jobs:
           DELETE: ${{ needs.prepare.outputs.delete }}
         run: |
           cd repo
+          if [ ! -f index.json ]; then echo '{"extensions":[]}' > index.json; fi
           python ../${{ github.ref_name }}/.github/scripts/merge-repo.py "$DELETE" '${{ github.ref_name }}/repo'
 
       - name: Deploy repo
