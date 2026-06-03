@@ -121,3 +121,4 @@ class BloggerExtractor(private val client: OkHttpClient) {
         private const val BLOGGER_BASE = "https://www.blogger.com/"
     }
 }
+
