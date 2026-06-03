@@ -145,6 +145,8 @@ jobs:
       - name: Download APK artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
+          # Specifichiamo lo stesso nome usato nel blocco build per scaricare il pacchetto corretto
+          name: "individual-apks-1"
           path: ~/apk-artifacts
 
       - name: Set up JDK
@@ -165,7 +167,8 @@ jobs:
         run: |
           mkdir -p ${{ github.ref_name }}/repo/apk
           
-          find ~/apk-artifacts -name "*.apk" -exec cp {} ${{ github.ref_name }}/repo/apk/ \;
+          # FORZATURA: Cerchiamo ricorsivamente gli APK ovunque siano stati estratti dentro ~/apk-artifacts
+          find ~/apk-artifacts -type f -name "*.apk" -exec cp {} ${{ github.ref_name }}/repo/apk/ \;
           
           cd ${{ github.ref_name }}
           find repo/apk/ -name "*-debug.apk" -exec sh -c 'mv "$1" "${1%-debug.apk}-release.apk"' _ {} \;
@@ -174,7 +177,6 @@ jobs:
           curl -L "$INSPECTOR_LINK" -o ./Inspector.jar
           java -jar ./Inspector.jar "repo/apk" "output.json" "tmp"
           python ./.github/scripts/create-repo.py
-
       - name: Checkout repo branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
