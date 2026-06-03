@@ -197,10 +197,14 @@ jobs:
           mkdir -p repo/apk
           cp -r ${{ github.ref_name }}/repo/apk/* repo/apk/
 
+          # 4. FORZATURA: Diciamo a Git di ignorare il .gitignore per la cartella apk
+          cd repo
+          git add -f apk/ index.json index.min.json
+
       - name: Deploy repo
         uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321 # v10.0.0
         with:
           message: "${{ needs.prepare.outputs.latestCommitMessage }}"
           cwd: "./repo"
-          add: "index.json index.min.json apk/"
-          force: true
+          # Lasciamo il punto "." così l'azione prende tutto quello che abbiamo già forzato sopra
+          add: "."
