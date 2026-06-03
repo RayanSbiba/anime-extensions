@@ -202,4 +202,5 @@ jobs:
         with:
           message: "${{ needs.prepare.outputs.latestCommitMessage }}"
           cwd: "./repo"
-          add: "index.json index.min.json apk/ --force"
+          add: '["index.json", "index.min.json", "apk/"]'
+          force: true
