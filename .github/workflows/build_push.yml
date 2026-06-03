@@ -91,7 +91,7 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ toJson(fromJson(needs.prepare.outputs.matrix).chunk) != '[]' }}
+    if: ${{ always() }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
@@ -125,7 +125,13 @@ jobs:
           KAISVA: ${{ secrets.KAISVA }}
           TMDB_API: ${{ secrets.TMDB_API }}
         run: |
-          MODS_DEBUG=$(echo "$MODULES" | sed 's/:assembleRelease/:assembleDebug/g')
+          # 1. Troviamo tutte le estensioni nella cartella src (es: :src:it:streamingcommunity)
+          ALL_MODULES=$(find src -mindepth 2 -maxdepth 2 -type d | sed 's/\//:/g' | sed 's/^/:/')
+          
+          # 2. Prepariamo i comandi di debug per Gradle
+          MODS_DEBUG=$(echo "$ALL_MODULES" | awk '{print $0":assembleDebug"}' | tr '\n' ' ')
+          
+          # 3. Avviamo la compilazione totale di tutto il catalogo
           ./gradlew $MODS_DEBUG
 
       - name: Upload APKs (${{ matrix.chunk.number }})
